@@ -15,40 +15,9 @@ Dart_Handle HandleError(Dart_Handle handle) {
 	return handle;
 }
 
-Dart_Handle	dartMssqlLib = HandleError(Dart_LookupLibrary(Dart_NewStringFromCString("package:dart_mssql/src/sql_connection.dart")));
-Dart_Handle	sqlResultClass = HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("SqlResult"), 0, NULL));
-
-class classExecute {
-private:
-	int	 errorCount = 0;
-	std::string errorMessages;
-public:
-	classExecute(const char* serverName, const char* dbName, const char* userName, const char* password, int64_t authType, const char* sqlCommand, Dart_Handle sqlParams, Dart_Handle* result) {
-		CoInitializeEx(NULL, COINIT_MULTITHREADED);
-		IDBInitialize* pSession = NULL;
-		Dart_Handle	dartSqlResult = HandleError(Dart_New(sqlResultClass, Dart_Null(), 0, NULL));
-		*result = dartSqlResult;
-		sqlConnect(serverName, dbName, userName, password, authType, &pSession, &errorCount, &errorMessages);
-		if (errorCount == 0) {
-			BSTR sqlCmd = UTF8ToBSTR(sqlCommand);
-			sqlExecute(pSession, sqlCmd, sqlParams, dartMssqlLib, dartSqlResult, &errorCount, &errorMessages);
-			SysFreeString(sqlCmd);
-			//if (jsonResult["rowsAffected"] > 0) { // melhorar isto pois está sendo executado em updates e deletes?
-			//	char s1[20] = "select @@identity";
-			//	BSTR s2 = UTF8ToBSTR(s1);
-				//json lastIdentity = sqlExecute(pSession, s2, NULL, &errorCount, &errorMessages);
-				//jsonResult["lastIdentity"] = lastIdentity["rows"][0][0];
-			//	SysFreeString(s2);
-			//}
-		}
-		if (errorCount != 0) {
-			HandleError(Dart_SetField(dartSqlResult, Dart_NewStringFromCString("_error"), Dart_NewStringFromCString(errorMessages.c_str())));
-		}
-	}
-	~classExecute() {
-		CoUninitialize();
-	}
-};
+Dart_Handle	dartMssqlLib;
+Dart_Handle	sqlResultClass;
+Dart_Handle	sqlReturnClass;
 
 void _connectCommand(Dart_NativeArguments arguments) {
 	const char *serverName;
@@ -56,7 +25,6 @@ void _connectCommand(Dart_NativeArguments arguments) {
 	const char *userName;
 	const char *password;
 	int64_t authType;
-	Dart_Handle result;
 	int	 errorCount = 0;
 	std::string errorMessages;
 	IDBInitialize* pSession = NULL;
@@ -68,60 +36,52 @@ void _connectCommand(Dart_NativeArguments arguments) {
 	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 3)), &password));
 	HandleError(Dart_IntegerToInt64(HandleError(Dart_GetNativeArgument(arguments, 4)), &authType));
 
+	Dart_Handle dartSqlReturn = HandleError(Dart_New(sqlReturnClass, Dart_Null(), 0, NULL));
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 	sqlConnect(serverName, databaseName, userName, password, authType, &pSession, &errorCount, &errorMessages);
 	if (errorCount == 0) {
-		result = HandleError(Dart_NewIntegerFromUint64((uintptr_t)pSession));
+		HandleError(Dart_SetField(dartSqlReturn, Dart_NewStringFromCString("handle"), Dart_NewIntegerFromUint64((uintptr_t)pSession)));
 	} else {
-		throw errorMessages;
+		HandleError(Dart_SetField(dartSqlReturn, Dart_NewStringFromCString("error"), Dart_NewStringFromCString(errorMessages.c_str())));
 	}
-
-	Dart_SetReturnValue(arguments, result);
+	Dart_SetReturnValue(arguments, dartSqlReturn);
 	Dart_ExitScope();
 }
 
 void _executeCommand(Dart_NativeArguments arguments) {
-	const char *serverName;
-	const char *databaseName;
-	const char *userName;
-	const char *password;
 	const char *sqlCommand;
-	int64_t authType;
-	int64_t handle;
+	uint64_t handle;
 	int	 errorCount = 0;
 	std::string errorMessages;
 	IDBInitialize* pSession = NULL;
 
 	Dart_EnterScope();
-	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 0)), &serverName));
-	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 1)), &databaseName));
-	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 2)), &userName));
-	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 3)), &password));
-	HandleError(Dart_IntegerToInt64(HandleError(Dart_GetNativeArgument(arguments, 4)), &authType));
-	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 5)), &sqlCommand));
-	Dart_Handle sqlParams = HandleError(Dart_GetNativeArgument(arguments, 6));
-	HandleError(Dart_IntegerToInt64(HandleError(Dart_GetNativeArgument(arguments, 7)), &handle));
+	HandleError(Dart_IntegerToUint64(HandleError(Dart_GetNativeArgument(arguments, 0)), &handle));
+	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 1)), &sqlCommand));
+	Dart_Handle sqlParams = HandleError(Dart_GetNativeArgument(arguments, 2));
 
-	//classExecute execute(serverName, databaseName, userName, password, authType, sqlCommand, sqlParams, &result);
-	Dart_Handle	dartMssqlLib = HandleError(Dart_LookupLibrary(Dart_NewStringFromCString("package:dart_mssql/src/sql_connection.dart")));
-	Dart_Handle	sqlResultClass = HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("SqlResult"), 0, NULL));
-
-	pSession = reinterpret_cast<IDBInitialize*>(handle);
-	Dart_Handle	dartSqlResult = HandleError(Dart_New(sqlResultClass, Dart_Null(), 0, NULL));
+	pSession = reinterpret_cast<IDBInitialize*>(handle);	
+	Dart_Handle dartSqlReturn = HandleError(Dart_New(sqlReturnClass, Dart_Null(), 0, NULL));
+	Dart_Handle dartSqlResult = HandleError(Dart_New(sqlResultClass, Dart_Null(), 0, NULL));
 	BSTR sqlCmd = UTF8ToBSTR(sqlCommand);
 	sqlExecute(pSession, sqlCmd, sqlParams, dartMssqlLib, dartSqlResult, &errorCount, &errorMessages);
+	if (errorCount != 0) {
+		HandleError(Dart_SetField(dartSqlReturn, Dart_NewStringFromCString("_error"), Dart_NewStringFromCString(errorMessages.c_str())));
+	}
+	else {
+		HandleError(Dart_SetField(dartSqlReturn, Dart_NewStringFromCString("result"), dartSqlResult));
+	}
 
-
-	Dart_SetReturnValue(arguments, dartSqlResult);
+	Dart_SetReturnValue(arguments, dartSqlReturn);
 	Dart_ExitScope();
 }
 
 void _disconnectCommand(Dart_NativeArguments arguments) {
-	int64_t handle;
+	uint64_t handle;
 	IDBInitialize* pSession = NULL;
 
 	Dart_EnterScope();
-	HandleError(Dart_IntegerToInt64(HandleError(Dart_GetNativeArgument(arguments, 0)), &handle));
+	HandleError(Dart_IntegerToUint64(HandleError(Dart_GetNativeArgument(arguments, 0)), &handle));
 	pSession = reinterpret_cast<IDBInitialize*>(handle);
 	if (pSession) {
 		pSession->Release();
@@ -180,6 +140,11 @@ DART_EXPORT Dart_Handle dart_mssql_Init(Dart_Handle library) {
 	if (Dart_IsError(result)) {
 		return result;
 	}
+
+	dartMssqlLib = Dart_NewPersistentHandle(HandleError(Dart_LookupLibrary(Dart_NewStringFromCString("package:dart_mssql/src/sql_connection.dart"))));
+	sqlResultClass = Dart_NewPersistentHandle(HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("SqlResult"), 0, NULL)));
+	sqlReturnClass = Dart_NewPersistentHandle(HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("_SqlReturn"), 0, NULL)));
+
 	return Dart_Null();
 }
 

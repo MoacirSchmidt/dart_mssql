@@ -269,7 +269,7 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 	hr = pICommandText->SetCommandText(DBGUID_DBSQL, sqlCommand);
 	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
 
-	if (Dart_IsNull(sqlParams))
+	if (sqlParams == NULL || Dart_IsNull(sqlParams))
 		sqlParamsCount = 0;
 	else
 		HandleError(Dart_ListLength(sqlParams, &sqlParamsCount));
@@ -288,8 +288,6 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 
 	hr = pICommandText->Execute(NULL, IID_IRowset, pParams, &cRowsAffected, (IUnknown**)&pIRowset);
 	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
-
-	HandleError(Dart_SetField(dartSqlResult, Dart_NewStringFromCString("rowsAffected"), HandleError(Dart_NewInteger(cRowsAffected))));
 
 	if (pIRowset != NULL) {
 		HACCESSOR	hShortAccessor = DB_NULL_HACCESSOR;
@@ -385,6 +383,7 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 				dartRows[totalRows - 1] = dartSqlRecord;
 			}
 		}
+		cRowsAffected = totalRows;
 		dartSqlResultRows = HandleError(Dart_NewList(totalRows));
 		for (DBLENGTH i = 0; i < totalRows; i++) {
 			HandleError(Dart_ListSetAt(dartSqlResultRows, i, dartRows[i]));
@@ -393,6 +392,8 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 		HandleError(Dart_SetField(dartSqlResult, Dart_NewStringFromCString("rows"), dartSqlResultRows));
 		HandleError(Dart_SetField(dartSqlResult, Dart_NewStringFromCString("columns"), dartSqlResultColumns));
 	}
+
+	HandleError(Dart_SetField(dartSqlResult, Dart_NewStringFromCString("rowsAffected"), HandleError(Dart_NewInteger(cRowsAffected))));
 
 CLEANUP:
 	if (pIRowset != NULL) {

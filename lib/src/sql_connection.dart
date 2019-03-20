@@ -20,16 +20,7 @@ class SqlRecord {
   SqlResult _sqlResult;
   List _values;
 
-  @override  //overring noSuchMethod
-  // noSuchMethod(Invocation invocation) => 'Got the ${invocation.memberName}';
-
-  /*noSuchMethod(Invocation invocation) { 
-    String name = invocation.memberName;
-    print('Got the ${name}'); 
-    print('Got the ${invocation.memberName}'); 
-  }
-  */
-
+  @override  
   noSuchMethod(Invocation invocation) {
     if (invocation.isGetter) {
       String name = invocation.memberName.toString().substring(8); // Symbol("columnName")
@@ -47,9 +38,6 @@ class SqlResult  {
   List columns;
   List rows;
   int rowsAffected = -1;
-  int lastIdentity = -1;
-  String _error;
-  int _rowIndex = 0;
   Map<String, int> _fieldIndexes = Map();
 
   void _updateFieldIndexes() {
@@ -79,7 +67,6 @@ class SqlResult  {
     this.rows = map["rows"];
     this.columns = map["columns"];
     this.rowsAffected = map["rowsAffected"];
-    this.lastIdentity = map["lastIdentity"];
     this._fieldIndexes = map["_fieldIndexes"];
     if (this._fieldIndexes == null) {
       _fieldIndexes = Map();
@@ -108,7 +95,6 @@ class SqlResult  {
       "columns": columns,
       "rows": rows,
       "rowsAffected": rowsAffected,
-      "lastIdentity": lastIdentity,
       "_fieldIndexes": _fieldIndexes,
     };
   }
@@ -162,29 +148,59 @@ class SqlResult  {
   }
 }
 
-SqlResult _executeCommand(String host, String databaseName, String username, String password, int authType, String sqlCommand, List<dynamic> params, int handle) native '_executeCommand';
+class _SqlReturn {
+  int handle;
+  String error;
+  SqlResult result;
+}
 
-int _connectCommand(String host, String databaseName, String username, String password, int authType) native '_connectCommand';
+_SqlReturn _connectCommand(String host, String databaseName, String username, String password, int authType) native '_connectCommand';
 
-void _disconnectCommand(int handle) native '_disconnectCommand';
+_SqlReturn _executeCommand(int handle, String sqlCommand, List<dynamic> params) native '_executeCommand';
+
+_SqlReturn _disconnectCommand(int handle) native '_disconnectCommand';
 
 class SqlConnection {
   String _username;
   String _password;
   String _host;
   String _databaseName;
+  int _handle = 0;
 
   SqlConnection(
       this._host, this._databaseName, this._username, this._password);
 
+  void open() {
+    _SqlReturn r = _connectCommand(_host, _databaseName, _username, _password, 0);
+    if (isNotEmpty(r.error))
+      throw r.error;
+    _handle = r.handle;
+  }
+
+  void _checkHandle() {
+    if (_handle <= 0) 
+      throw "Not connected";
+  }
+
   SqlResult execute(String sqlCommand, [List<dynamic> params]) {
-    int handle = _connectCommand(_host, _databaseName, _username, _password, 0);
-    print(handle);
-    SqlResult result = _executeCommand(_host, _databaseName, _username, _password, 0, sqlCommand, params, handle);
-    _disconnectCommand(handle);
-    if (isNotEmpty(result._error))
-      throw result._error;
-    result._updateFieldIndexes();
-    return result;
+    _checkHandle();
+    _SqlReturn r = _executeCommand(_handle, sqlCommand, params);
+    if (isNotEmpty(r.error))
+      throw r.error;
+    r.result._updateFieldIndexes();
+    return r.result;
+  }
+
+  int lastIdentity() {
+    SqlResult r = execute("select @@identity");
+    if (r.rows != null && r.rows.isNotEmpty) {
+      return r.rows[0]._values[0];
+    } else
+      return null;
+  }
+
+  void close() {
+    _disconnectCommand(_handle);
+    _handle = 0;
   }
 }
