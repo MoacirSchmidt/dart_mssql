@@ -1,0 +1,4 @@
+linter:
+  rules:
+    exclude:
+      - non_constant_identifier_names

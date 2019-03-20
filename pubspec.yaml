@@ -1,0 +1,16 @@
+name: dart_mssql
+description: High Performance Microsoft SQL Server Driver for Dart (32 & 64bits)
+version: 0.1.0+8
+author: Moacir Schmidt <moacir.schmidt@gmail.com>
+homepage: https://www.polygonus.com
+repository: https://github.com/MoacirSchmidt/dart_mssql
+
+environment:
+  sdk: ">=2.0.0 <3.0.0" 
+  
+dependencies: 
+  quiver: '>=2.0.0 <3.0.0'
+  collection: ^1.14.11
+
+dev_dependencies:
+  pedantic: ^1.0.0
