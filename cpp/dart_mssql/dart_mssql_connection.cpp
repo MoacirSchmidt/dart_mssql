@@ -155,11 +155,16 @@ Dart_Handle dbColumnValueToDartHandle(DBBINDING* rgBindings, DBCOLUMNINFO *rgCol
 				result = HandleError(Dart_NewInteger(wcstol((wchar_t *)pvValue, NULL, 10)));
 				break;
 			default:
-				// Copy the string data
-				c = new char[ulLength * 2];
-				WideCharToMultiByte(CP_UTF8, 0, (wchar_t *)pvValue, -1, c, ulLength * 2, NULL, NULL);
-				result = HandleError(Dart_NewStringFromCString(c));
-				delete[] c;
+				if (ulLength == 0) { // caso especial de string vazia ('')
+					result = Dart_EmptyString();
+				}
+				else {
+					// Copy the string data
+					c = new char[ulLength * 2];
+					WideCharToMultiByte(CP_UTF8, 0, (wchar_t *)pvValue, -1, c, ulLength * 2, NULL, NULL);
+					result = HandleError(Dart_NewStringFromCString(c));
+					delete[] c;
+				}
 			}
 			break;
 			case DBTYPE_IUNKNOWN:
@@ -249,7 +254,7 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 	DBPARAMS*			pParams;
 	DBORDINAL			cbParamsRowSize;
 	intptr_t			sqlParamsCount;
-	Dart_Handle			sqlRecordClass = HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("SqlRecord"), 0, NULL));
+	Dart_Handle			sqlRowClass = HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("SqlRow"), 0, NULL));
 	Dart_Handle			dartSqlResultColumns = NULL;
 	Dart_Handle			dartSqlResultRows = NULL;
 	Dart_Handle*		dartRows = NULL;
@@ -315,7 +320,7 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 		// Create acessor for large data columns
 		hr = createLargeDataAcessors(pIRowset, &hLargeAccessors, &cLargeBindings, &rgLargeBindings, cColumns, rgColumnInfo, errorCount, errorMessages);
 
-		dartSqlResultColumns = HandleError(Dart_NewList(cColumns));
+		dartSqlResultColumns = HandleError(Dart_NewListOf(Dart_CoreType_String, cColumns));
 		for (DBORDINAL iCol = 0; iCol < cColumns; iCol++) {
 			char* buffer;
 			buffer = WideCharToUTF8(rgColumnInfo[iCol].pwszName);
@@ -337,8 +342,8 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 		}
 
 		while (hr == S_OK) {
-			Dart_Handle	dartSqlRecord;
-			Dart_Handle	dartSqlRecordValues;
+			Dart_Handle	dartSqlRow;
+			Dart_Handle	dartSqlRowValues;
 			ULONG		iShortCol = 0;
 			ULONG		iLargeCol = 0;
 
@@ -347,8 +352,8 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 			if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
 
 			if (cRowsReturned == 1) {
-				dartSqlRecord = HandleError(Dart_New(sqlRecordClass, Dart_Null(), 0, NULL));
-				dartSqlRecordValues = HandleError(Dart_NewList(cColumns));
+				dartSqlRow = HandleError(Dart_New(sqlRowClass, Dart_Null(), 0, NULL));
+				dartSqlRowValues = HandleError(Dart_NewList(cColumns));
 
 				// get short pData;
 				if (cShortBindings > 0) {
@@ -368,10 +373,10 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 						colValue = dbColumnValueToDartHandle(rgShortBindings, rgColumnInfo, pShortData, iShortCol, iCol, errorCount, errorMessages);
 						iShortCol++;
 					}
-					HandleError(Dart_ListSetAt(dartSqlRecordValues, iCol, colValue)); 
+					HandleError(Dart_ListSetAt(dartSqlRowValues, iCol, colValue)); 
 				}
-				HandleError(Dart_SetField(dartSqlRecord, dartValuesName, dartSqlRecordValues));
-				HandleError(Dart_SetField(dartSqlRecord, dartSqlResultName, dartSqlResult));
+				HandleError(Dart_SetField(dartSqlRow, dartValuesName, dartSqlRowValues));
+				HandleError(Dart_SetField(dartSqlRow, dartSqlResultName, dartSqlResult));
 
 				hr = pIRowset->ReleaseRows(cRowsReturned, pRow, NULL, NULL, NULL);
 				if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
@@ -380,7 +385,7 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 
 				totalRows += cRowsReturned;
 				dartRows = (Dart_Handle*)CoTaskMemRealloc(dartRows, totalRows * sizeof(Dart_Handle*));
-				dartRows[totalRows - 1] = dartSqlRecord;
+				dartRows[totalRows - 1] = dartSqlRow;
 			}
 		}
 		cRowsAffected = totalRows;

@@ -1,11 +1,11 @@
 import 'dart-ext:dart_mssql';
+import 'package:meta/meta.dart';
 import 'package:quiver/strings.dart';
 
-String strSlice(String s, [int num = 1]) {
-  return isEmpty(s) ? "" : s.substring(0, s.length - 1);
-}
+import 'package:dart_mssql/recase.dart';
 
-String sqlDate(DateTime d) {
+/// Convert a DateTime to a string suitable by MS-SQL commands 
+String sqlDateTime(DateTime d) {
   String r = d.toString();
   r = r.substring(0, r.length - 4);
   if (r.endsWith(".")) {
@@ -14,11 +14,28 @@ String sqlDate(DateTime d) {
   return r;
 }
 
-class SqlRecord {
-  SqlRecord();
+String _strSlice(String s, [int num = 1]) {
+  return isEmpty(s) ? "" : s.substring(0, s.length - 1);
+}
+
+/// Each row returned from a query
+class SqlRow {
+
+  SqlRow();
 
   SqlResult _sqlResult;
   List _values;
+
+  dynamic operator [](int index) => _values[index];
+
+  Map<String, dynamic> toJson({recaseKey:recaseKeyNone}) {
+    Map<String, dynamic> map = Map();
+    int i = 0;
+    _sqlResult?._fieldIndexes?.forEach((k, v) {
+      map[recaseKey(k)] = _values[i++];
+    });
+    return map;
+  }
 
   @override  
   noSuchMethod(Invocation invocation) {
@@ -34,9 +51,16 @@ class SqlRecord {
   }
 }
 
+/// Result set returned from a query
 class SqlResult  {
-  List columns;
+
+  /// List<String> with column names
+  List<String> columns;
+
+  /// List of [SqlRow] objects with all returned rows from a query
   List rows;
+
+  /// Number of rows affected by last insert, update or delete command
   int rowsAffected = -1;
   Map<String, int> _fieldIndexes = Map();
 
@@ -49,103 +73,6 @@ class SqlResult  {
   }
 
   SqlResult();
-
-  SqlResult.fromJson(Map map) {
-    this.columns = List();
-    this.rows = List();
-    this.rows.add(List());
-    map.forEach((k,v) {
-      Map<String, dynamic> c = Map();
-      c["name"] = k;
-      c["type"] = 1; // missing mapping sql types from dart types?
-      this.columns.add(c);
-      this.rows[0].add(v);
-    });
-  }
-
-  SqlResult.fromMap(Map map) {
-    this.rows = map["rows"];
-    this.columns = map["columns"];
-    this.rowsAffected = map["rowsAffected"];
-    this._fieldIndexes = map["_fieldIndexes"];
-    if (this._fieldIndexes == null) {
-      _fieldIndexes = Map();
-    }
-    if (this._fieldIndexes.isEmpty) {
-      _updateFieldIndexes();
-    }
-  }
-
-  int index(String fieldName) {
-    return _fieldIndexes[fieldName];
-  }
-
-  String values(String fieldName) {
-    int fieldIndex = _fieldIndexes[fieldName];
-    String ids = "-1,";
-    rows.forEach((e) {
-      ids += e[fieldIndex].toString() + ",";
-    });
-    ids = strSlice(ids);
-    return ids;
-  }
-  
-  Map asMap() {
-    return {
-      "columns": columns,
-      "rows": rows,
-      "rowsAffected": rowsAffected,
-      "_fieldIndexes": _fieldIndexes,
-    };
-  }
-
-  String mapToInsert(String tableName, Map<String, dynamic> map,
-      [String fieldList]) {
-    String fieldNames = "";
-    String fieldValues = "";
-    if (fieldList != null) {
-      fieldList = ",$fieldList,";
-    }
-    map.forEach((n, v) {
-      if (fieldList == null || fieldList.contains(",$n,")) {
-        fieldNames += n + ',';
-        if (v is String) {
-          if (n.indexOf("dat_") == 0) {
-            fieldValues +=
-                "${v == null ? null : "'" + sqlDate(DateTime.tryParse(v).toUtc()) + "'"},";
-          } else {
-            fieldValues +=
-                "${v == null ? null : "'" + v.replaceAll("'", "''") + "'"},";
-          }
-        } else {
-          fieldValues += "$v,";
-        }
-      }
-    });
-    fieldNames = strSlice(fieldNames);
-    fieldValues = strSlice(fieldValues);
-    return "insert into $tableName($fieldNames) values ($fieldValues)";
-  }
-
-  String mapToUpdate(
-      String tableName, Map<String, dynamic> map, String whereClause) {
-    String fieldValues = "";
-    map.forEach((n, v) {
-      if (v is String) {
-        if (n.indexOf("dat_") == 0) {
-          fieldValues +=
-              "$n = ${v == null ? null : "'" + sqlDate(DateTime.tryParse(v).toUtc()) + "'"},";
-        } else {
-          fieldValues +=
-              "$n = ${v == null ? null : "'" + v.replaceAll("'", "''") + "'"},";
-        }
-      } else {
-        fieldValues += "$n = $v,";
-      }
-    });
-    fieldValues = strSlice(fieldValues);
-    return "update $tableName set $fieldValues where $whereClause";
-  }
 }
 
 class _SqlReturn {
@@ -154,34 +81,44 @@ class _SqlReturn {
   SqlResult result;
 }
 
-_SqlReturn _connectCommand(String host, String databaseName, String username, String password, int authType) native '_connectCommand';
+_SqlReturn _connectCommand(String host, String databaseName, String username, String passwordword, int authType) native '_connectCommand';
 
 _SqlReturn _executeCommand(int handle, String sqlCommand, List<dynamic> params) native '_executeCommand';
 
 _SqlReturn _disconnectCommand(int handle) native '_disconnectCommand';
 
+/// This is the primary type of this library, a connection is responsible for connecting to databases and executing queries. 
 class SqlConnection {
-  String _username;
-  String _password;
-  String _host;
-  String _databaseName;
+
+  /// Name of database server
+  String host;
+
+  /// Name of database 
+  String db;
+
+  /// user name used to connect
+  String user;
+
+  /// password used to connect 
+  String password;
+
   int _handle = 0;
 
-  SqlConnection(
-      this._host, this._databaseName, this._username, this._password);
-
-  void open() {
-    _SqlReturn r = _connectCommand(_host, _databaseName, _username, _password, 0);
+  SqlConnection({
+      @required this.host, @required this.db, this.user, this.password}) {
+    _SqlReturn r = _connectCommand(host, db, user, password, 0);
     if (isNotEmpty(r.error))
       throw r.error;
     _handle = r.handle;
   }
 
   void _checkHandle() {
-    if (_handle <= 0) 
+    if (_handle <= 0) {
       throw "Not connected";
+    }
   }
 
+  /// Executes a sql command with optional params 
   SqlResult execute(String sqlCommand, [List<dynamic> params]) {
     _checkHandle();
     _SqlReturn r = _executeCommand(_handle, sqlCommand, params);
@@ -191,6 +128,7 @@ class SqlConnection {
     return r.result;
   }
 
+  /// Returns the identity column value of last inserted row
   int lastIdentity() {
     SqlResult r = execute("select @@identity");
     if (r.rows != null && r.rows.isNotEmpty) {
@@ -199,8 +137,36 @@ class SqlConnection {
       return null;
   }
 
+  /// Inserts row into tableName. 
+  /// Returns the number of rows inserted
+  int insert(String tableName, Map<String, dynamic> row, {List<String> onlyColumns, List<String> excludedColumns}) {
+    String fieldNames = "";
+    String fieldValues = "";
+    row.forEach((n, v) {
+      if ((onlyColumns == null || onlyColumns.contains(n)) && (excludedColumns == null || !excludedColumns.contains(n))) {
+        fieldNames += n + ',';
+        if (v is DateTime) {
+          fieldValues +=
+              "${v == null ? null : "'" + sqlDateTime(v) + "'"},";
+        } else if (v is String) {
+          fieldValues +=
+              "${v == null ? null : "'" + v.replaceAll("'", "''") + "'"},";
+        } else {
+          fieldValues += "$v,";
+        }
+      };
+    });
+    fieldNames = _strSlice(fieldNames);
+    fieldValues = _strSlice(fieldValues);
+    SqlResult r = execute("insert into $tableName($fieldNames) values ($fieldValues)");
+    return r.rowsAffected;
+  }
+
+  /// Closes the connection. Remember to allways close connections afer use
   void close() {
-    _disconnectCommand(_handle);
+    if (_handle > 0) {
+      _disconnectCommand(_handle);
+    }
     _handle = 0;
   }
 }

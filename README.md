@@ -14,15 +14,20 @@ High Performance Microsoft SQL Server Driver for Dart (32 & 64bits)
 Demo code to perform Raw SQL queries
 
 ```dart
+import 'dart:io';
 import 'package:dart_mssql/dart_mssql.dart';
 
 void main() async {
-  MssqlConnection connection = MssqlConnection("SERVERNAME", "DBNAME", "USERNAME", "PASSWORD");
-  int id = 1;
-  String cmd = "select * from nacionalidade where id_nacionalidade=$id"; // sorry! param binding not yet implemented!
-
-  SqlResult result = await connection.execute(cmd);
-  print("${result.rows.toString()}");
+  SqlConnection connection = SqlConnection(host:"SERVERNAME", db:"DBNAME", user:"USERNAME", password:"PASSWORD");
+  String cmd = "select email from usuario where id_usuario=?";
+  
+  SqlResult result = connection.execute(cmd,[4]);
+  result.rows.forEach((e) {
+    print("${e.email}");
+  });
+  print("end of printing.");
+  connection.close();
+  stdin.readLineSync();
 }
 ```
 

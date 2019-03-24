@@ -3,7 +3,6 @@
 #include <comdef.h>     
 #include <comutil.h>
 #include <map>
-#include <list>
 #include <exception>
 #include "msoledbsql.h"
 #include "dart_api.h"
@@ -19,6 +18,53 @@ Dart_Handle	dartMssqlLib;
 Dart_Handle	sqlResultClass;
 Dart_Handle	sqlReturnClass;
 
+void registerHandleInGlobalInterfaceTable(IDBInitialize* pSession, Dart_Handle dartSqlReturn, int* errorCount, std::string* errorMessages) {
+	HRESULT hr;
+
+	IGlobalInterfaceTable* pGIT = NULL;
+	hr = CoCreateInstance(CLSID_StdGlobalInterfaceTable,
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		IID_IGlobalInterfaceTable,
+		(void**)&pGIT);
+	DWORD dwCookie = 0;
+	if (oleCheck(hr, errorCount, errorMessages) >= 0) {
+		hr = pGIT->RegisterInterfaceInGlobal(pSession, IID_IDBInitialize, &dwCookie);
+		if (oleCheck(hr, errorCount, errorMessages) >= 0) {
+			HandleError(Dart_SetField(dartSqlReturn, Dart_NewStringFromCString("handle"), Dart_NewIntegerFromUint64(dwCookie)));
+		}
+	}
+}
+
+IDBInitialize* getHandleFromGlobalInterfaceTable(DWORD cookie, int* errorCount, std::string* errorMessages) {
+	IDBInitialize* pSession = NULL;
+	HRESULT hr;
+	IGlobalInterfaceTable* pGIT = NULL;
+	hr = CoCreateInstance(CLSID_StdGlobalInterfaceTable,
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		IID_IGlobalInterfaceTable,
+		(void**)&pGIT);
+	if (oleCheck(hr, errorCount, errorMessages) >= 0) {
+		hr = pGIT->GetInterfaceFromGlobal(cookie, IID_IDBInitialize, (void**)&pSession);
+		oleCheck(hr, errorCount, errorMessages);
+	}
+	return pSession;
+}
+
+void revokeInterfaceFromGlobalInterfaceTable(DWORD cookie) {
+	HRESULT hr;
+	IGlobalInterfaceTable* pGIT = NULL;
+	hr = CoCreateInstance(CLSID_StdGlobalInterfaceTable,
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		IID_IGlobalInterfaceTable,
+		(void**)&pGIT);
+	if (hr == S_OK) {
+		hr = pGIT->RevokeInterfaceFromGlobal(cookie);
+	}
+}
+
 void _connectCommand(Dart_NativeArguments arguments) {
 	const char *serverName;
 	const char *databaseName;
@@ -28,8 +74,10 @@ void _connectCommand(Dart_NativeArguments arguments) {
 	int	 errorCount = 0;
 	std::string errorMessages;
 	IDBInitialize* pSession = NULL;
+	HRESULT		   hr = S_OK;
 
 	Dart_EnterScope();
+	
 	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 0)), &serverName));
 	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 1)), &databaseName));
 	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 2)), &userName));
@@ -37,11 +85,11 @@ void _connectCommand(Dart_NativeArguments arguments) {
 	HandleError(Dart_IntegerToInt64(HandleError(Dart_GetNativeArgument(arguments, 4)), &authType));
 
 	Dart_Handle dartSqlReturn = HandleError(Dart_New(sqlReturnClass, Dart_Null(), 0, NULL));
-	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 	sqlConnect(serverName, databaseName, userName, password, authType, &pSession, &errorCount, &errorMessages);
 	if (errorCount == 0) {
-		HandleError(Dart_SetField(dartSqlReturn, Dart_NewStringFromCString("handle"), Dart_NewIntegerFromUint64((uintptr_t)pSession)));
-	} else {
+		registerHandleInGlobalInterfaceTable(pSession, dartSqlReturn, &errorCount, &errorMessages);
+	};
+	if (errorCount != 0) {
 		HandleError(Dart_SetField(dartSqlReturn, Dart_NewStringFromCString("error"), Dart_NewStringFromCString(errorMessages.c_str())));
 	}
 	Dart_SetReturnValue(arguments, dartSqlReturn);
@@ -50,23 +98,26 @@ void _connectCommand(Dart_NativeArguments arguments) {
 
 void _executeCommand(Dart_NativeArguments arguments) {
 	const char *sqlCommand;
-	uint64_t handle;
+	int64_t handle;
 	int	 errorCount = 0;
 	std::string errorMessages;
 	IDBInitialize* pSession = NULL;
 
 	Dart_EnterScope();
-	HandleError(Dart_IntegerToUint64(HandleError(Dart_GetNativeArgument(arguments, 0)), &handle));
+	
+	HandleError(Dart_IntegerToInt64(HandleError(Dart_GetNativeArgument(arguments, 0)), &handle));
 	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 1)), &sqlCommand));
 	Dart_Handle sqlParams = HandleError(Dart_GetNativeArgument(arguments, 2));
 
-	pSession = reinterpret_cast<IDBInitialize*>(handle);	
+	pSession = getHandleFromGlobalInterfaceTable((DWORD)handle, &errorCount, &errorMessages);
 	Dart_Handle dartSqlReturn = HandleError(Dart_New(sqlReturnClass, Dart_Null(), 0, NULL));
 	Dart_Handle dartSqlResult = HandleError(Dart_New(sqlResultClass, Dart_Null(), 0, NULL));
-	BSTR sqlCmd = UTF8ToBSTR(sqlCommand);
-	sqlExecute(pSession, sqlCmd, sqlParams, dartMssqlLib, dartSqlResult, &errorCount, &errorMessages);
+	if (errorCount == 0) {
+		BSTR sqlCmd = UTF8ToBSTR(sqlCommand);
+		sqlExecute(pSession, sqlCmd, sqlParams, dartMssqlLib, dartSqlResult, &errorCount, &errorMessages);
+	}
 	if (errorCount != 0) {
-		HandleError(Dart_SetField(dartSqlReturn, Dart_NewStringFromCString("_error"), Dart_NewStringFromCString(errorMessages.c_str())));
+		HandleError(Dart_SetField(dartSqlReturn, Dart_NewStringFromCString("error"), Dart_NewStringFromCString(errorMessages.c_str())));
 	}
 	else {
 		HandleError(Dart_SetField(dartSqlReturn, Dart_NewStringFromCString("result"), dartSqlResult));
@@ -78,15 +129,18 @@ void _executeCommand(Dart_NativeArguments arguments) {
 
 void _disconnectCommand(Dart_NativeArguments arguments) {
 	uint64_t handle;
+	int	 errorCount = 0;
+	std::string errorMessages;
 	IDBInitialize* pSession = NULL;
 
 	Dart_EnterScope();
+
 	HandleError(Dart_IntegerToUint64(HandleError(Dart_GetNativeArgument(arguments, 0)), &handle));
-	pSession = reinterpret_cast<IDBInitialize*>(handle);
+	pSession = getHandleFromGlobalInterfaceTable((DWORD)handle, &errorCount, &errorMessages);
+	revokeInterfaceFromGlobalInterfaceTable((DWORD)handle);
 	if (pSession) {
 		pSession->Release();
 	}
-	CoUninitialize();
 	Dart_ExitScope();
 }
 
@@ -133,6 +187,10 @@ Dart_NativeFunction nativeResolver(Dart_Handle name, int argc, bool * autoSetupS
 }
 
 DART_EXPORT Dart_Handle dart_mssql_Init(Dart_Handle library) {
+
+	// This should have to be CoUnitialized somewhere. Perhaps when Dart provides a "Done" hook?
+	CoInitializeEx(NULL, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
+
 	if (Dart_IsError(library)) {
 		return library;
 	}
