@@ -28,7 +28,7 @@ class SqlRow {
 
   dynamic operator [](int index) => _values[index];
 
-  Map<String, dynamic> toJson({recaseKey:recaseKeyNone}) {
+  Map<String, dynamic> toJson({recaseKey=recaseKeyNone}) {
     Map<String, dynamic> map = Map();
     int i = 0;
     _sqlResult?._fieldIndexes?.forEach((k, v) {
@@ -161,6 +161,30 @@ class SqlConnection {
     SqlResult r = execute("insert into $tableName($fieldNames) values ($fieldValues)");
     return r.rowsAffected;
   }
+  
+  /// Updates row into tableName. 
+  /// Returns the number of rows inserted
+  update(String tableName, Map<String, dynamic> row, String where, List<dynamic> whereArgs, {List<String> onlyColumns, List<String> excludedColumns}) {
+    assert(isNotEmpty(where) && whereArgs != null && whereArgs.isNotEmpty);
+    String fieldValues = "";
+    row.forEach((n, v) {
+      if ((onlyColumns == null || onlyColumns.contains(n)) && (excludedColumns == null || !excludedColumns.contains(n))) {
+        fieldValues += n + '=';
+        if (v is DateTime) {
+          fieldValues +=
+              "${v == null ? null : "'" + sqlDateTime(v) + "'"},";
+        } else if (v is String) {
+          fieldValues +=
+              "${v == null ? null : "'" + v.replaceAll("'", "''") + "'"},";
+        } else {
+          fieldValues += "$v,";
+        }
+      }
+    });
+    fieldValues = _strSlice(fieldValues);
+    SqlResult r = execute("update $tableName set $fieldValues where $where", whereArgs);
+    return r.rowsAffected;
+    }
 
   /// Closes the connection. Remember to allways close connections afer use
   void close() {
