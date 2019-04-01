@@ -1,80 +1,13 @@
 import 'dart-ext:dart_mssql';
 import 'package:meta/meta.dart';
-import 'package:quiver/strings.dart';
 
-import 'package:dart_mssql/recase.dart';
-
-/// Convert a DateTime to a string suitable by MS-SQL commands 
-String sqlDateTime(DateTime d) {
-  String r = d.toString();
-  r = r.substring(0, r.length - 4);
-  if (r.endsWith(".")) {
-    r += "0";
-  }
-  return r;
-}
+import 'package:string_utils/string_utils.dart';
+import 'package:sql_result/sql_result.dart';
+import 'package:sql_utils/sql_utils.dart';
 
 String _strSlice(String s, [int num = 1]) {
   return isEmpty(s) ? "" : s.substring(0, s.length - 1);
 }
-
-/// Each row returned from a query
-class SqlRow {
-
-  SqlRow();
-
-  SqlResult _sqlResult;
-  List _values;
-
-  dynamic operator [](int index) => _values[index];
-
-  Map<String, dynamic> toJson({recaseKey=recaseKeyNone}) {
-    Map<String, dynamic> map = Map();
-    int i = 0;
-    _sqlResult?._fieldIndexes?.forEach((k, v) {
-      map[recaseKey(k)] = _values[i++];
-    });
-    return map;
-  }
-
-  @override  
-  noSuchMethod(Invocation invocation) {
-    if (invocation.isGetter) {
-      String name = invocation.memberName.toString().substring(8); // Symbol("columnName")
-      name = name.substring(0,name.length-2);
-      var i = _sqlResult._fieldIndexes[name];
-      if (i != null) {
-        return _values[i];
-      }
-    }
-    return super.noSuchMethod(invocation);
-  }
-}
-
-/// Result set returned from a query
-class SqlResult  {
-
-  /// List<String> with column names
-  List<String> columns;
-
-  /// List of [SqlRow] objects with all returned rows from a query
-  List rows;
-
-  /// Number of rows affected by last insert, update or delete command
-  int rowsAffected = -1;
-  Map<String, int> _fieldIndexes = Map();
-
-  void _updateFieldIndexes() {
-    int i = 0;
-    columns?.forEach((c) {
-      _fieldIndexes[c] = i;
-      i++;
-    });
-  }
-
-  SqlResult();
-}
-
 class _SqlReturn {
   int handle;
   String error;
@@ -124,7 +57,7 @@ class SqlConnection {
     _SqlReturn r = _executeCommand(_handle, sqlCommand, params);
     if (isNotEmpty(r.error))
       throw r.error;
-    r.result._updateFieldIndexes();
+    r.result.updateFieldIndexes();
     return r.result;
   }
 
@@ -194,3 +127,4 @@ class SqlConnection {
     _handle = 0;
   }
 }
+
