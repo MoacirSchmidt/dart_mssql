@@ -57,7 +57,7 @@ Copy correct dart_mssql.dll file into project main directory.
 
 
 ```
-# Compile with Microsoft Visual Studio 2017 Community Edition
+# Compiling with Microsoft Visual Studio 2017 Community Edition
 
 IF AND ONLY IF you want to compile library source code (C++ part) follow the instructions below:
 
