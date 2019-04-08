@@ -1,11 +1,9 @@
 import 'dart:io';
-import 'dart:collection';
 
 import 'package:dart_mssql/dart_mssql.dart';
 
 
 void main() {
-  final Map map = LinkedHashMap<String,dynamic>();
   SqlConnection connection = SqlConnection(host:"SERVERNAME", db:"DBNAME", user:"USERNAME", password:"PASSWORD");
   String cmd = "select * from usuario where id_usuario=?"; // parameters binding!
   
