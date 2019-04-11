@@ -61,6 +61,19 @@ class SqlConnection {
     return r.result;
   }
 
+  SqlRow selectOne(String sqlCommand, [List<dynamic> params]) {
+    _checkHandle();
+    _SqlReturn r = _executeCommand(_handle, sqlCommand, params);
+    if (isNotEmpty(r.error))
+      throw r.error;
+    r.result.updateFieldIndexes();
+    if (r.result.rows.isEmpty) {
+      return null;
+    } else {
+      return r.result.rows.first;
+    }
+  }
+
   /// Returns the identity column value of last inserted row
   int lastIdentity() {
     SqlResult r = execute("select @@identity");

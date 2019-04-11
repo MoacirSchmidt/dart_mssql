@@ -25,7 +25,7 @@ HRESULT createLargeDataAcessors(IUnknown* pUnkRowset, HACCESSOR** phAccessors, D
 
 HRESULT createParamsAccessor(IUnknown* pUnkRowset, HACCESSOR* phAccessor, DBCOUNTITEM sqlParamsCount, Dart_Handle sqlParams, DBORDINAL* pcbRowSize, void** ppParamData, int* errorCount, std::string* errorMessages);
 
-void freeBindings(DBORDINAL	cBindings, DBBINDING *rgBindings);
+void freeBindings(DBORDINAL cBindings, DBBINDING *rgBindings);
 
 HRESULT sqlConnect(const char* serverName, const char* dbName, const char* userName, const char* password, int64_t authType, IDBInitialize** ppInitialize, int* errorCount, std::string* errorMessages);
 

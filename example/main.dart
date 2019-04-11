@@ -5,7 +5,7 @@ import 'package:dart_mssql/dart_mssql.dart';
 
 void main() {
   SqlConnection connection = SqlConnection(host:"SERVERNAME", db:"DBNAME", user:"USERNAME", password:"PASSWORD");
-  String cmd = "select * from usuario where id_usuario=?"; // parameters binding!
+  String cmd = "select email from user where user_id=?"; // parameters binding!
   
   SqlResult result = connection.execute(cmd,[4]);
   result.rows.forEach((e) {
