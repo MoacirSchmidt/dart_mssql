@@ -8,6 +8,7 @@ import 'package:sql_utils/sql_utils.dart';
 String _strSlice(String s, [int num = 1]) {
   return isEmpty(s) ? "" : s.substring(0, s.length - 1);
 }
+
 class _SqlReturn {
   int handle;
   String error;
@@ -61,6 +62,7 @@ class SqlConnection {
     return r.result;
   }
 
+  /// Executes a sql command that returns one single row (allow optional params)
   SqlRow selectOne(String sqlCommand, [List<dynamic> params]) {
     _checkHandle();
     _SqlReturn r = _executeCommand(_handle, sqlCommand, params);
@@ -76,15 +78,17 @@ class SqlConnection {
 
   /// Returns the identity column value of last inserted row
   int lastIdentity() {
-    SqlResult r = execute("select @@identity");
+    SqlResult r = execute("select @@identity as idty");
     if (r.rows != null && r.rows.isNotEmpty) {
-      return r.rows[0]._values[0];
+      return r.rows.first.idty;
     } else
       return null;
   }
 
-  /// Inserts row into tableName. 
+  /// Inserts [row] into [tableName]. 
   /// Returns the number of rows inserted
+  /// if [onlyColumns] is specified, only this columns will be used from [row] map
+  /// if [excludedColumns] is specified, all columns from [row] map will be used EXCEPT these ones
   int insert(String tableName, Map<String, dynamic> row, {List<String> onlyColumns, List<String> excludedColumns}) {
     String fieldNames = "";
     String fieldValues = "";
@@ -108,8 +112,11 @@ class SqlConnection {
     return r.rowsAffected;
   }
   
-  /// Updates row into tableName. 
-  /// Returns the number of rows inserted
+  /// Updates [row] into [tableName]. 
+  /// Returns the number of rows updated
+  /// [where] and [whereArgs] will be used as update where clause
+  /// if [onlyColumns] is specified, only this columns will be used from [row] map
+  /// if [excludedColumns] is specified, all columns from [row] map will be used EXCEPT these ones
   update(String tableName, Map<String, dynamic> row, String where, List<dynamic> whereArgs, {List<String> onlyColumns, List<String> excludedColumns}) {
     assert(isNotEmpty(where) && whereArgs != null && whereArgs.isNotEmpty);
     String fieldValues = "";

@@ -11,14 +11,7 @@ environment:
 dependencies: 
   meta: ^1.1.6
   collection: ^1.14.11
-  sql_recase:
-    path: ../../shared/sql_recase
-  sql_result:
-    path: ../../shared/sql_result
-  string_utils:
-    path: ../../shared/string_utils
-  sql_utils:
-    path: ../../server/sql_utils
-
-dev_dependencies:
-  pedantic: ^1.0.0
+  string_utils: ^0.2.0
+  sql_utils: ^0.2.0
+  sql_recase: ^0.2.1
+  sql_result: ^0.2.2
