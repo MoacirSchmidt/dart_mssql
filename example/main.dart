@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:dart_mssql/dart_mssql.dart';
 
-// clas "Client" for ORM example
+// class "Client" for ORM example
 class Client {
   int client_id;
   String client_name;
@@ -21,7 +21,7 @@ class Client {
   }
 }
 
-// clas "Invoice" for ORM example
+// class "Invoice" for ORM example
 class Invoice {
   int client_id;
   int inv_number;
