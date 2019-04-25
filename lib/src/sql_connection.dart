@@ -139,6 +139,15 @@ class SqlConnection {
     return r.rowsAffected;
     }
 
+  /// Delete [row] from [tableName]. 
+  /// Returns the number of rows deleted
+  /// [where] and [whereArgs] will be used as delete where clause
+  delete(String tableName, String where, List<dynamic> whereArgs, {List<String> onlyColumns, List<String> excludedColumns}) {
+    assert(isNotEmpty(where) && whereArgs != null && whereArgs.isNotEmpty);
+    SqlResult r = execute("delete $tableName where $where", whereArgs);
+    return r.rowsAffected;
+  }
+
   /// Closes the connection. Remember to allways close connections afer use
   void close() {
     if (_handle > 0) {

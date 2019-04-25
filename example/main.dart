@@ -55,6 +55,27 @@ void main() {
   dynamic row = connection.selectOne(cmd,[4]); // "dynamic" var is important...
   print(row.id_nacionalidade); // ...to allow accessing fields by name
 
+  // raw insert
+  cmd = "insert into nacionalidade(id_nacionalidade,nom_nacionalidade) values (1, 'Brasileira')";
+  connection.execute(cmd);
+
+  // raw update 
+  cmd = "update nacionalidade set nom_nacionalidade = 'Argentica' where id_nacionalidade=1";
+  connection.execute(cmd);
+
+  // raw delete
+  cmd = "delete from nacionalidade where id_nacionalidade=1";
+  connection.execute(cmd);
+
+  // insert
+  connection.insert("nacionalidade", {"id_nacionalidade": 1, "nom_nacionalidade": "Brasileira"});
+  
+  // update
+  connection.update("nacionalidade", {"nom_nacionalidade": "Argentina"}, "id_nacionalidade=?", [1]);
+
+  // delete
+  connection.delete("nacionalidade", "id_nacionalidade=?", [1]);  
+
   // Bonus: How to make a master/detail ORM query:
   SqlResult master = connection.execute("select client_id, client_name from client");
   SqlResult detail = connection.execute("select client_id, inv_number from invoice");
