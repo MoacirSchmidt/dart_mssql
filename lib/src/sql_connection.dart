@@ -142,7 +142,7 @@ class SqlConnection {
   /// Delete [row] from [tableName]. 
   /// Returns the number of rows deleted
   /// [where] and [whereArgs] will be used as delete where clause
-  delete(String tableName, String where, List<dynamic> whereArgs, {List<String> onlyColumns, List<String> excludedColumns}) {
+  delete(String tableName, String where, List<dynamic> whereArgs) {
     assert(isNotEmpty(where) && whereArgs != null && whereArgs.isNotEmpty);
     SqlResult r = execute("delete $tableName where $where", whereArgs);
     return r.rowsAffected;
