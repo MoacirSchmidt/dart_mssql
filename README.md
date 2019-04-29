@@ -4,6 +4,7 @@ High Performance Microsoft SQL Server Driver for Dart (32 & 64bits)
 
 # Important
 
+- This package is not suitable for mobile projects. It only runs in Server-Side Dart.
 - Works only on Windows (32bits or 64bits)
 - You have to install OLE DB Driver 
 - You have to install Microsoft Visual C++ Redistributable
