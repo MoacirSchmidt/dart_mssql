@@ -1,6 +1,6 @@
 # dart_mssql
 
-High Performance Microsoft SQL Server Driver for Dart (32 & 64bits)
+High Performance Microsoft SQL Server (MS-SQL Server) Driver for Dart (32 & 64bits)
 
 # Important
 
