@@ -60,7 +60,7 @@ void main() {
   connection.execute(cmd);
 
   // raw update 
-  cmd = "update nacionalidade set nom_nacionalidade = 'Argentica' where id_nacionalidade=1";
+  cmd = "update nacionalidade set nom_nacionalidade = 'Argentina' where id_nacionalidade=1";
   connection.execute(cmd);
 
   // raw delete
