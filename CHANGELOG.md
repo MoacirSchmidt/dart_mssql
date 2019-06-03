@@ -1,3 +1,7 @@
-## [0.0.1] - Initial Release
+## [0.2.5] 
 
-* Microsoft SQL Server Driver for Dart (32 & 64bits) initial release.
+* Health suggestions adjustments
+
+## [0.2.4] 
+
+* DBTYPE_NUMERIC bug fix!

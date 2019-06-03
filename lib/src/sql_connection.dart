@@ -41,8 +41,9 @@ class SqlConnection {
   SqlConnection({
       @required this.host, @required this.db, this.user, this.password}) {
     _SqlReturn r = _connectCommand(host, db, user, password, 0);
-    if (isNotEmpty(r.error))
+    if (isNotEmpty(r.error)) {
       throw r.error;
+    }
     _handle = r.handle;
   }
 
@@ -56,8 +57,9 @@ class SqlConnection {
   SqlResult execute(String sqlCommand, [List<dynamic> params]) {
     _checkHandle();
     _SqlReturn r = _executeCommand(_handle, sqlCommand, params);
-    if (isNotEmpty(r.error))
+    if (isNotEmpty(r.error)) {
       throw r.error;
+    }
     r.result.updateFieldIndexes();
     return r.result;
   }
@@ -66,8 +68,9 @@ class SqlConnection {
   SqlRow selectOne(String sqlCommand, [List<dynamic> params]) {
     _checkHandle();
     _SqlReturn r = _executeCommand(_handle, sqlCommand, params);
-    if (isNotEmpty(r.error))
+    if (isNotEmpty(r.error)) {
       throw r.error;
+    }
     r.result.updateFieldIndexes();
     if (r.result.rows.isEmpty) {
       return null;
@@ -81,8 +84,9 @@ class SqlConnection {
     SqlResult r = execute("select @@identity as idty");
     if (r.rows != null && r.rows.isNotEmpty) {
       return r.rows.first.idty;
-    } else
+    } else {
       return null;
+    }
   }
 
   /// Inserts [row] into [tableName]. 
