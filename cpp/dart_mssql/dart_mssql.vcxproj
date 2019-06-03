@@ -103,7 +103,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);F:\DartSDK32\dart-sdk\include;C:\Program Files\Microsoft SQL Server\Client SDK\OLEDB\181\SDK\Include;..\dart_mssql</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);F:\DartSDK32\dart-sdk\include;C:\Program Files\Microsoft SQL Server\Client SDK\OLEDB\182\SDK\Include;..\dart_mssql</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;F:\DartSDK\dart-sdk\bin</LibraryPath>
     <ExecutablePath>$(VC_ExecutablePath_x86);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(SystemRoot)\SysWow64;$(FxCopDir);$(PATH);</ExecutablePath>
   </PropertyGroup>
@@ -115,7 +115,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);F:\DartSDK64\dart-sdk\include;C:\Program Files\Microsoft SQL Server\Client SDK\OLEDB\181\SDK\Include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);F:\DartSDK64\dart-sdk\include;C:\Program Files\Microsoft SQL Server\Client SDK\OLEDB\182\SDK\Include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;F:\DartSDK64\dart-sdk\bin</LibraryPath>
     <ExecutablePath>$(VC_ExecutablePath_x64);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(SystemRoot)\System32;$(FxCopDir);$(PATH);</ExecutablePath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -131,13 +131,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);F:\DartSDK32\dart-sdk\include;C:\Program Files\Microsoft SQL Server\Client SDK\OLEDB\181\SDK\Include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);F:\DartSDK32\dart-sdk\include;C:\Program Files\Microsoft SQL Server\Client SDK\OLEDB\182\SDK\Include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;F:\DartSDK\dart-sdk\bin</LibraryPath>
     <ExecutablePath>$(VC_ExecutablePath_x86);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(SystemRoot)\SysWow64;$(FxCopDir);$(PATH);</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);F:\DartSDK64\dart-sdk\include;C:\Program Files\Microsoft SQL Server\Client SDK\OLEDB\181\SDK\Include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);F:\DartSDK64\dart-sdk\include;C:\Program Files\Microsoft SQL Server\Client SDK\OLEDB\182\SDK\Include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;F:\DartSDK64\dart-sdk\bin</LibraryPath>
     <ExecutablePath>$(VC_ExecutablePath_x64);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(FxCopDir);$(PATH);</ExecutablePath>
   </PropertyGroup>
@@ -155,7 +155,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);F:\DartSDK32\dart-sdk\bin\dart.lib</AdditionalDependencies>
-      <OutputFile>F:\flutter\dart_mssql\dart_mssql.dll</OutputFile>
+      <OutputFile>F:\flutter\polygonus\server\dart_mssql\dart_mssql.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='IsolateTests|Win32'">
@@ -172,7 +172,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);F:\DartSDKDebug\sdk\tools\sdks\dart-sdk\bin\dart.lib</AdditionalDependencies>
-      <OutputFile>F:\flutter\master_poker\aqueduct\dart_mssql.dll</OutputFile>
+      <OutputFile>F:\flutter\polygonus\server\dart_mssql\dart_mssql.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -190,7 +190,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);F:\DartSDK64\dart-sdk\bin\dart.lib</AdditionalDependencies>
-      <OutputFile>F:\flutter\polygonus_mobile\server\dart_mssql.dll</OutputFile>
+      <OutputFile>F:\flutter\polygonus\server\dart_mssql\dart_mssql.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='IsolateTests|x64'">
@@ -208,7 +208,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);F:\DartSDK64\dart-sdk\bin\dart.lib</AdditionalDependencies>
-      <OutputFile>F:\flutter\polygonus_mobile\server\dart_mssql.dll</OutputFile>
+      <OutputFile>F:\flutter\polygonus\server\dart_mssql\dart_mssql.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -228,7 +228,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);F:\DartSDK32\dart-sdk\bin\dart.lib</AdditionalDependencies>
-      <OutputFile>F:\flutter\polygonus_mobile\server\dart_mssql.dll</OutputFile>
+      <OutputFile>F:\flutter\polygonus\server\dart_mssql\dart_mssql.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -249,7 +249,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);F:\DartSDK64\dart-sdk\bin\dart.lib</AdditionalDependencies>
-      <OutputFile>F:\flutter\polygonus_mobile\server\dart_mssql.dll</OutputFile>
+      <OutputFile>F:\flutter\polygonus\server\dart_mssql\dart_mssql.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

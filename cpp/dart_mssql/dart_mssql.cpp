@@ -28,9 +28,9 @@ void registerHandleInGlobalInterfaceTable(IDBInitialize* pSession, Dart_Handle d
 		IID_IGlobalInterfaceTable,
 		(void**)&pGIT);
 	DWORD dwCookie = 0;
-	if (oleCheck(hr, errorCount, errorMessages) >= 0) {
+	if (oleCheck(hr, pSession, IID_IDBInitialize, errorCount, errorMessages) >= 0) {
 		hr = pGIT->RegisterInterfaceInGlobal(pSession, IID_IDBInitialize, &dwCookie);
-		if (oleCheck(hr, errorCount, errorMessages) >= 0) {
+		if (oleCheck(hr, pSession, IID_IDBInitialize, errorCount, errorMessages) >= 0) {
 			HandleError(Dart_SetField(dartSqlReturn, Dart_NewStringFromCString("handle"), Dart_NewIntegerFromUint64(dwCookie)));
 		}
 	}
@@ -45,9 +45,9 @@ IDBInitialize* getHandleFromGlobalInterfaceTable(DWORD cookie, int* errorCount, 
 		CLSCTX_INPROC_SERVER,
 		IID_IGlobalInterfaceTable,
 		(void**)&pGIT);
-	if (oleCheck(hr, errorCount, errorMessages) >= 0) {
+	if (oleCheck(hr, NULL, GUID_NULL, errorCount, errorMessages) >= 0) {
 		hr = pGIT->GetInterfaceFromGlobal(cookie, IID_IDBInitialize, (void**)&pSession);
-		oleCheck(hr, errorCount, errorMessages);
+		oleCheck(hr, NULL, GUID_NULL, errorCount, errorMessages);
 	}
 	return pSession;
 }

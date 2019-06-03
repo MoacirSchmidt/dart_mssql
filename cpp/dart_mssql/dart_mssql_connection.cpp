@@ -30,7 +30,7 @@ HRESULT sqlConnect(const char* serverName, const char* dbName, const char* userN
 		CLSCTX_INPROC_SERVER,
 		IID_IDBInitialize,
 		(void **)&pIDBInitialize);
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pIDBInitialize, IID_IDBInitialize, errorCount, errorMessages) < 0) goto CLEANUP;
 
 	// Initialize property values needed to establish connection.  
 	for (int i = 0; i < 4; i++) {
@@ -86,14 +86,14 @@ HRESULT sqlConnect(const char* serverName, const char* dbName, const char* userN
 
 	// Set initialization properties.  
 	hr = pIDBInitialize->QueryInterface(IID_IDBProperties, (void **)&pIDBProperties);
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pIDBProperties, IID_IDBProperties, errorCount, errorMessages) < 0) goto CLEANUP;
 
 	hr = pIDBProperties->SetProperties(1, rgInitPropSet);
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pIDBProperties, IID_IDBProperties, errorCount, errorMessages) < 0) goto CLEANUP;
 
 	// Now establish the connection to the data source.  
 	hr = pIDBInitialize->Initialize();
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pIDBInitialize, IID_IDBInitialize, errorCount, errorMessages) < 0) goto CLEANUP;
 
 	// I'm not sure if we need that
 	for (int i = 0; i < 4; i++) {
@@ -151,6 +151,8 @@ Dart_Handle dbColumnValueToDartHandle(DBBINDING* rgBindings, DBCOLUMNINFO *rgCol
 		case DBTYPE_WSTR:
 			switch (rgColumnInfo[iInfoCol].wType) {
 			case DBTYPE_NUMERIC:
+				result = HandleError(Dart_NewDouble(wcstod((wchar_t *)pvValue, NULL)));
+				break;
 			case DBTYPE_I4:
 				result = HandleError(Dart_NewInteger(wcstol((wchar_t *)pvValue, NULL, 10)));
 				break;
@@ -195,7 +197,7 @@ Dart_Handle dbColumnValueToDartHandle(DBBINDING* rgBindings, DBCOLUMNINFO *rgCol
 				}
 				while (SUCCEEDED(hr) && hr != S_FALSE && cbRead == cbNeeded);
 
-				if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+				if (oleCheck(hr, NULL, GUID_NULL, errorCount, errorMessages) < 0) goto CLEANUP;
 
 				// Since streams don't provide NULL-termination,
 				// we'll NULL-terminate the resulting string ourselves
@@ -260,19 +262,19 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 	Dart_Handle*		dartRows = NULL;
 
 	hr = pInitialize->QueryInterface(IID_IDBCreateSession, (void**)&pIDBCreateSession);
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pIDBCreateSession, IID_IDBCreateSession, errorCount, errorMessages) < 0) goto CLEANUP;
 
 	hr = pIDBCreateSession->CreateSession(NULL, IID_IDBCreateCommand, &pSession);
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pSession, IID_IDBCreateCommand, errorCount, errorMessages) < 0) goto CLEANUP;
 
 	hr = pSession->QueryInterface(IID_IDBCreateCommand, (void**)&pIDBCreateCommand);
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pIDBCreateCommand, IID_IDBCreateCommand, errorCount, errorMessages) < 0) goto CLEANUP;
 
 	hr = pIDBCreateCommand->CreateCommand(NULL,	IID_ICommandText, (IUnknown**)&pICommandText);
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pICommandText, IID_ICommandText, errorCount, errorMessages) < 0) goto CLEANUP;
 
 	hr = pICommandText->SetCommandText(DBGUID_DBSQL, sqlCommand);
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pICommandText, IID_ICommandText, errorCount, errorMessages) < 0) goto CLEANUP;
 
 	if (sqlParams == NULL || Dart_IsNull(sqlParams))
 		sqlParamsCount = 0;
@@ -281,7 +283,7 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 
 	if (sqlParamsCount != 0) {
 		hr = createParamsAccessor(pICommandText, &hParamsAccessor, sqlParamsCount, sqlParams, &cbParamsRowSize, &pParamData, errorCount, errorMessages);
-		if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+		if (oleCheck(hr, NULL, GUID_NULL, errorCount, errorMessages) < 0) goto CLEANUP;
 		pParams = new DBPARAMS;
 		pParams->cParamSets = 1;
 		pParams->hAccessor = hParamsAccessor;
@@ -292,7 +294,7 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 	}		
 
 	hr = pICommandText->Execute(NULL, IID_IRowset, pParams, &cRowsAffected, (IUnknown**)&pIRowset);
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pICommandText, IID_IRowset, errorCount, errorMessages) < 0) goto CLEANUP;
 
 	if (pIRowset != NULL) {
 		HACCESSOR	hShortAccessor = DB_NULL_HACCESSOR;
@@ -305,17 +307,17 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 		// Obtain the column information for the Rowset; from this, we can find
 		hr = pIRowset->QueryInterface(
 			IID_IColumnsInfo, (void**)&pIColumnsInfo);
-		if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+		if (oleCheck(hr, pIColumnsInfo, IID_IColumnsInfo, errorCount, errorMessages) < 0) goto CLEANUP;
 		hr = pIColumnsInfo->GetColumnInfo(
 			&cColumns,		//pcColumns
 			&rgColumnInfo,	//prgColumnInfo
 			&pStringBuffer	//ppStringBuffer
 		);
-		if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+		if (oleCheck(hr, pIColumnsInfo, IID_IColumnsInfo, errorCount, errorMessages) < 0) goto CLEANUP;
 
 		// Create acessor for short data columns
 		hr = createShortDataAccessor(pIRowset, &hShortAccessor, &cShortBindings, &rgShortBindings, cColumns, rgColumnInfo, &cbShortRowSize, errorCount, errorMessages);
-		if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+		if (oleCheck(hr, NULL, GUID_NULL, errorCount, errorMessages) < 0) goto CLEANUP;
 
 		// Create acessor for large data columns
 		hr = createLargeDataAcessors(pIRowset, &hLargeAccessors, &cLargeBindings, &rgLargeBindings, cColumns, rgColumnInfo, errorCount, errorMessages);
@@ -349,7 +351,7 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 
 			// Attempt to get row handle from the provider
 			hr = pIRowset->GetNextRows(DB_NULL_HCHAPTER, 0, 1, &cRowsReturned, &pRow);
-			if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+			if (oleCheck(hr, pIRowset, IID_IRowset, errorCount, errorMessages) < 0) goto CLEANUP;
 
 			if (cRowsReturned == 1) {
 				dartSqlRow = HandleError(Dart_New(sqlRowClass, Dart_Null(), 0, NULL));
@@ -358,14 +360,14 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 				// get short pData;
 				if (cShortBindings > 0) {
 					hr = pIRowset->GetData(pRow[0], hShortAccessor, pShortData);
-					if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+					if (oleCheck(hr, pIRowset, IID_IRowset, errorCount, errorMessages) < 0) goto CLEANUP;
 				}
 
 				for (ULONG iCol = 0; iCol < cColumns; iCol++) {
 					Dart_Handle colValue;
 					if (rgColumnInfo[iCol].wType == DBTYPE_IUNKNOWN || (rgColumnInfo[iCol].dwFlags & DBCOLUMNFLAGS_ISLONG) != 0) {
 						hr = pIRowset->GetData(pRow[0], hLargeAccessors[iLargeCol], pLargeData);
-						if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+						if (oleCheck(hr, pIRowset, IID_IRowset, errorCount, errorMessages) < 0) goto CLEANUP;
 						colValue = dbColumnValueToDartHandle(rgLargeBindings, rgColumnInfo, pLargeData, iLargeCol, iCol, errorCount, errorMessages);
 						iLargeCol++;
 					}
@@ -379,7 +381,7 @@ void sqlExecute(IDBInitialize* pInitialize, const LPCOLESTR sqlCommand, Dart_Han
 				HandleError(Dart_SetField(dartSqlRow, dartSqlResultName, dartSqlResult));
 
 				hr = pIRowset->ReleaseRows(cRowsReturned, pRow, NULL, NULL, NULL);
-				if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+				if (oleCheck(hr, pIRowset, IID_IRowset, errorCount, errorMessages) < 0) goto CLEANUP;
 				CoTaskMemFree(pRow);
 				pRow = NULL;
 

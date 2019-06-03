@@ -86,9 +86,9 @@ class SqlConnection {
   }
 
   /// Inserts [row] into [tableName]. 
-  /// Returns the number of rows inserted
-  /// if [onlyColumns] is specified, only this columns will be used from [row] map
-  /// if [excludedColumns] is specified, all columns from [row] map will be used EXCEPT these ones
+  /// Returns the number of rows inserted.
+  /// if [onlyColumns] is specified, only this columns will be used from [row] map.
+  /// if [excludedColumns] is specified, all columns from [row] map will be used EXCEPT these ones.
   int insert(String tableName, Map<String, dynamic> row, {List<String> onlyColumns, List<String> excludedColumns}) {
     String fieldNames = "";
     String fieldValues = "";

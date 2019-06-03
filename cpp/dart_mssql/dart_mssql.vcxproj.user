@@ -5,27 +5,35 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>F:\DartSDK32\dart-sdk\bin\dart.exe </LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>"--enable-asserts" "example\main.dart" </LocalDebuggerCommandArguments>
-    <LocalDebuggerWorkingDirectory>f:\flutter\dart_mssql</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>f:\flutter\polygonus\server\dart_mssql</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='IsolateTests|x64'">
     <LocalDebuggerDebuggerType>Mixed</LocalDebuggerDebuggerType>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>F:\DartSDK32\dart-sdk\bin\dart.exe </LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>"--enable-asserts" "example\main.dart" </LocalDebuggerCommandArguments>
-    <LocalDebuggerWorkingDirectory>f:\flutter\dart_mssql</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>f:\flutter\polygonus\server\dart_mssql</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>F:\DartSDK32\dart-sdk\bin\dart.exe </LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>"--enable-asserts" "example\main.dart" </LocalDebuggerCommandArguments>
-    <LocalDebuggerWorkingDirectory>f:\flutter\dart_mssql</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>f:\flutter\polygonus\server\dart_mssql</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='IsolateTests|Win32'">
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>F:\DartSDKDebug\sdk\out\DebugIA32\dart.exe</LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>"--enable-asserts" "bin\main.dart" </LocalDebuggerCommandArguments>
-    <LocalDebuggerWorkingDirectory>F:\flutter\master_poker\aqueduct</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>f:\flutter\polygonus\server\dart_mssql</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LocalDebuggerWorkingDirectory>f:\flutter\polygonus\server\dart_mssql</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerWorkingDirectory>f:\flutter\polygonus\server\dart_mssql</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

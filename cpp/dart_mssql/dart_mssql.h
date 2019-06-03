@@ -15,7 +15,9 @@ BSTR intToBSTR(int number);
 
 void addError(int* errorCount, std::string* errorMessages, const std::string errorMessage);
 
-HRESULT oleCheck(HRESULT hr, int* errorCount, std::string* errorMessages);
+HRESULT oleCheck(HRESULT hr, IUnknown* pObjectWithError, REFIID IID_InterfaceWithError, int* errorCount, std::string* errorMessages);
+
+void DumpErrorInfo(IUnknown* pObjectWithError, REFIID IID_InterfaceWithError, int* errorCount, std::string* errorMessages);
 
 HRESULT memoryCheck(HRESULT hr, void *pv, int* errorCount, std::string* errorMessages);
 

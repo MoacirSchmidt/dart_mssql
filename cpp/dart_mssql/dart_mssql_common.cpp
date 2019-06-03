@@ -39,7 +39,190 @@ char* WideCharToUTF8(const wchar_t* value) {
 	return buffer;
 }
 
-HRESULT oleCheck(HRESULT hr, int* errorCount, std::string* errorMessages) {
+// DumpErrorInfo queries MSOLEDBSQL error interfaces, retrieving available  
+// status or error information.  
+void DumpErrorInfo(IUnknown* pObjectWithError, REFIID IID_InterfaceWithError, int* errorCount, std::string* errorMessages)
+{
+
+	// Interfaces used in the example.  
+	IErrorInfo*             pIErrorInfoAll = NULL;
+	IErrorInfo*             pIErrorInfoRecord = NULL;
+	IErrorRecords*          pIErrorRecords = NULL;
+	ISupportErrorInfo*      pISupportErrorInfo = NULL;
+	ISQLErrorInfo*          pISQLErrorInfo = NULL;
+	ISQLServerErrorInfo*    pISQLServerErrorInfo = NULL;
+
+	// Number of error records.  
+	ULONG                   nRecs;
+	ULONG                   nRec;
+
+	// Basic error information from GetBasicErrorInfo.  
+	ERRORINFO               errorinfo;
+
+	// IErrorInfo values.  
+	BSTR                    bstrDescription;
+	BSTR                    bstrSource;
+
+	// ISQLErrorInfo parameters.  
+	BSTR                    bstrSQLSTATE;
+	LONG                    lNativeError;
+
+	// ISQLServerErrorInfo parameter pointers.  
+	SSERRORINFO*            pSSErrorInfo = NULL;
+	OLECHAR*                pSSErrorStrings = NULL;
+
+	// Hard-code an American English locale for the example.  
+	DWORD                   MYLOCALEID = 0x0409;
+
+	// Only ask for error information if the interface supports  
+	// it.  
+	if (FAILED(pObjectWithError->QueryInterface(IID_ISupportErrorInfo,
+		(void**)&pISupportErrorInfo)))
+	{
+		fwprintf_s(stderr, L"SupportErrorErrorInfo interface not supported");
+		return;
+	}
+	if (FAILED(pISupportErrorInfo->
+		InterfaceSupportsErrorInfo(IID_InterfaceWithError)))
+	{
+		fwprintf_s(stderr, L"InterfaceWithError interface not supported");
+		return;
+	}
+
+	// Do not test the return of GetErrorInfo. It can succeed and return  
+	// a NULL pointer in pIErrorInfoAll. Simply test the pointer.  
+	GetErrorInfo(0, &pIErrorInfoAll);
+
+	if (pIErrorInfoAll != NULL)
+	{
+		// Test to see if it's a valid OLE DB IErrorInfo interface   
+		// exposing a list of records.  
+		if (SUCCEEDED(pIErrorInfoAll->QueryInterface(IID_IErrorRecords,
+			(void**)&pIErrorRecords)))
+		{
+			pIErrorRecords->GetRecordCount(&nRecs);
+
+			// Within each record, retrieve information from each  
+			// of the defined interfaces.  
+			for (nRec = 0; nRec < nRecs; nRec++)
+			{
+				// From IErrorRecords, get the HRESULT and a reference  
+				// to the ISQLErrorInfo interface.  
+				pIErrorRecords->GetBasicErrorInfo(nRec, &errorinfo);
+				pIErrorRecords->GetCustomErrorObject(nRec,
+					IID_ISQLErrorInfo, (IUnknown**)&pISQLErrorInfo);
+
+				// Display the HRESULT, then use the ISQLErrorInfo.  
+				fwprintf_s(stderr, L"HRESULT:\t%#X\n", errorinfo.hrError);
+
+				if (pISQLErrorInfo != NULL)
+				{
+					pISQLErrorInfo->GetSQLInfo(&bstrSQLSTATE,
+						&lNativeError);
+
+					// Display the SQLSTATE and native error values.  
+					fwprintf_s(stderr, L"SQLSTATE:\t%s\nNative Error:\t%ld\n", bstrSQLSTATE, lNativeError);
+
+					// SysFree BSTR references.  
+					SysFreeString(bstrSQLSTATE);
+
+					// Get the ISQLServerErrorInfo interface from  
+					// ISQLErrorInfo before releasing the reference.  
+					pISQLErrorInfo->QueryInterface(
+						IID_ISQLServerErrorInfo,
+						(void**)&pISQLServerErrorInfo);
+
+					pISQLErrorInfo->Release();
+				}
+
+				// Test to ensure the reference is valid, then  
+				// get error information from ISQLServerErrorInfo.  
+				if (pISQLServerErrorInfo != NULL)
+				{
+					pISQLServerErrorInfo->GetErrorInfo(&pSSErrorInfo,
+						&pSSErrorStrings);
+
+					// ISQLServerErrorInfo::GetErrorInfo succeeds  
+					// even when it has nothing to return. Test the  
+					// pointers before using.  
+					if (pSSErrorInfo)
+					{
+						// Display the state and severity from the  
+						// returned information. The error message comes  
+						// from IErrorInfo::GetDescription.  
+						fwprintf_s(stderr, L"Error state:\t%d\nSeverity:\t%d\n", pSSErrorInfo->bState, pSSErrorInfo->bClass);
+
+						// IMalloc::Free needed to release references  
+						// on returned values. For the example, assume  
+						// the g_pIMalloc pointer is valid.  
+						// Moacir: Troquei pra CoTaskMemFree pq nao achei lib de g_pIMalloc
+						CoTaskMemFree(pSSErrorStrings);
+						CoTaskMemFree(pSSErrorInfo);
+					}
+
+					pISQLServerErrorInfo->Release();
+				}
+
+				if (SUCCEEDED(pIErrorRecords->GetErrorInfo(nRec,
+					MYLOCALEID, &pIErrorInfoRecord)))
+				{
+					// Get the source and description (error message)  
+					// from the record's IErrorInfo.  
+					pIErrorInfoRecord->GetSource(&bstrSource);
+					pIErrorInfoRecord->GetDescription(&bstrDescription);
+
+					if (bstrSource != NULL)
+					{
+						fwprintf_s(stderr, L"Source:\t\t%s\n", bstrSource);
+						SysFreeString(bstrSource);
+					}
+					if (bstrDescription != NULL)
+					{
+						fwprintf_s(stderr, L"Error message:\t%s\n",	bstrDescription);
+						SysFreeString(bstrDescription);
+					}
+
+					pIErrorInfoRecord->Release();
+				}
+			}
+
+			pIErrorRecords->Release();
+		}
+		else
+		{
+			// IErrorInfo is valid; get the source and  
+			// description to see what it is.  
+			pIErrorInfoAll->GetSource(&bstrSource);
+			pIErrorInfoAll->GetDescription(&bstrDescription);
+
+			if (bstrSource != NULL)
+			{
+				fwprintf_s(stderr, L"Source:\t\t%s\n", bstrSource);
+				SysFreeString(bstrSource);
+			}
+			if (bstrDescription != NULL)
+			{
+				fwprintf_s(stderr, L"Error message:\t%s\n", bstrDescription);
+				SysFreeString(bstrDescription);
+			}
+		}
+
+		pIErrorInfoAll->Release();
+	}
+	else
+	{
+		fwprintf_s(stderr, L"GetErrorInfo failed.");
+	}
+
+	pISupportErrorInfo->Release();
+
+	return;
+}
+
+HRESULT oleCheck(HRESULT hr, IUnknown* pObjectWithError, REFIID IID_InterfaceWithError, int* errorCount, std::string* errorMessages) {
+	if (FAILED(hr) && pObjectWithError != NULL) {
+		DumpErrorInfo(pObjectWithError, IID_InterfaceWithError, errorCount, errorMessages);
+	}
 	// fill errorMessages if last operation had a error 
 	if (FAILED(hr) && errorCount != NULL) {
 		IErrorInfo		*pIErrorInfo = NULL;
@@ -102,7 +285,7 @@ HRESULT oleCheck(HRESULT hr, int* errorCount, std::string* errorMessages) {
 HRESULT memoryCheck(HRESULT hr, void *pv, int* errorCount, std::string* errorMessages) {
 	if (!pv) {
 		hr = E_OUTOFMEMORY;
-		return oleCheck(hr, errorCount, errorMessages);
+		return oleCheck(hr, NULL, GUID_NULL, errorCount, errorMessages);
 	}
 	else {
 		return hr;
@@ -166,50 +349,50 @@ HRESULT getProperty(IUnknown* pIUnknown, REFIID	riid, DBPROPID dwPropertyID, REF
 	if (riid == IID_IDBProperties) {
 		hr = pIUnknown->QueryInterface(IID_IDBProperties,
 			(void**)&pIDBProperties);
-		if (oleCheck(hr, NULL, NULL) < 0) goto CLEANUP;
+		if (oleCheck(hr, pIDBProperties, IID_IDBProperties, NULL, NULL) < 0) goto CLEANUP;
 		hr = pIDBProperties->GetProperties(
 			1,					//cPropertyIDSets
 			rgPropertyIDSets,	//rgPropertyIDSets
 			&cPropSets,			//pcPropSets
 			&rgPropSets			//prgPropSets);
 		);
-		if (oleCheck(hr, NULL, NULL) < 0) goto CLEANUP;
+		if (oleCheck(hr, pIDBProperties, IID_IDBProperties, NULL, NULL) < 0) goto CLEANUP;
 	}
 	else if (riid == IID_ISessionProperties) {
 		hr = pIUnknown->QueryInterface(IID_ISessionProperties,
 			(void**)&pISesProps);
-		if (oleCheck(hr, NULL, NULL) < 0) goto CLEANUP;
+		if (oleCheck(hr, pISesProps, IID_ISessionProperties, NULL, NULL) < 0) goto CLEANUP;
 		hr = pISesProps->GetProperties(
 			1,					//cPropertyIDSets
 			rgPropertyIDSets,	//rgPropertyIDSets
 			&cPropSets,			//pcPropSets
 			&rgPropSets			//prgPropSets
 		);
-		if (oleCheck(hr, NULL, NULL) < 0) goto CLEANUP;
+		if (oleCheck(hr, pISesProps, IID_ISessionProperties, NULL, NULL) < 0) goto CLEANUP;
 	}
 	else if (riid == IID_ICommandProperties) {
 		hr = pIUnknown->QueryInterface(IID_ICommandProperties,
 			(void**)&pICmdProps);
-		if (oleCheck(hr, NULL, NULL) < 0) goto CLEANUP;
+		if (oleCheck(hr, pICmdProps, IID_ICommandProperties, NULL, NULL) < 0) goto CLEANUP;
 		hr = pICmdProps->GetProperties(
 			1,					//cPropertyIDSets
 			rgPropertyIDSets,	//rgPropertyIDSets
 			&cPropSets,			//pcPropSets
 			&rgPropSets			//prgPropSets
 		);
-		if (oleCheck(hr, NULL, NULL) < 0) goto CLEANUP;
+		if (oleCheck(hr, pICmdProps, IID_ICommandProperties, NULL, NULL) < 0) goto CLEANUP;
 	}
 	else {
 		hr = pIUnknown->QueryInterface(IID_IRowsetInfo,
 			(void**)&pIRowsetInfo);
-		if (oleCheck(hr, NULL, NULL) < 0) goto CLEANUP;
+		if (oleCheck(hr, pIRowsetInfo, IID_IRowsetInfo, NULL, NULL) < 0) goto CLEANUP;
 		hr = pIRowsetInfo->GetProperties(
 			1,					//cPropertyIDSets
 			rgPropertyIDSets,	//rgPropertyIDSets
 			&cPropSets,			//pcPropSets
 			&rgPropSets			//prgPropSets
 		);
-		if (oleCheck(hr, NULL, NULL) < 0) goto CLEANUP;
+		if (oleCheck(hr, pIRowsetInfo, IID_IRowsetInfo, NULL, NULL) < 0) goto CLEANUP;
 	}
 
 	// Return the value for this property to the caller if
@@ -396,7 +579,7 @@ HRESULT createShortDataAccessor(IUnknown* pUnkRowset, HACCESSOR* phAccessor, DBO
 		// to this Accessor, which we will use when fetching data
 		hr = pUnkRowset->QueryInterface(
 			IID_IAccessor, (void**)&pIAccessor);
-		if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+		if (oleCheck(hr, pIAccessor, IID_IAccessor, errorCount, errorMessages) < 0) goto CLEANUP;
 		hr = pIAccessor->CreateAccessor(
 			DBACCESSOR_ROWDATA,	//dwAccessorFlags
 			iShortCol,			//cBindings
@@ -405,7 +588,7 @@ HRESULT createShortDataAccessor(IUnknown* pUnkRowset, HACCESSOR* phAccessor, DBO
 			phAccessor,			//phAccessor	
 			NULL				//rgStatus
 		);
-		if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+		if (oleCheck(hr, pIAccessor, IID_IAccessor, errorCount, errorMessages) < 0) goto CLEANUP;
 	}
 
 	// Return the row size (the current dwOffset is the size of the row),
@@ -513,7 +696,7 @@ HRESULT createLargeDataAcessors(IUnknown* pUnkRowset, HACCESSOR** phAccessors, D
 				// to this Accessor, which we will use when fetching data
 				hr = pUnkRowset->QueryInterface(
 					IID_IAccessor, (void**)&pIAccessor);
-				if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+				if (oleCheck(hr, pIAccessor, IID_IAccessor, errorCount, errorMessages) < 0) goto CLEANUP;
 				hr = pIAccessor->CreateAccessor(
 					DBACCESSOR_ROWDATA,		//dwAccessorFlags
 					1,						//cBindings
@@ -609,7 +792,7 @@ HRESULT createParamsAccessor(IUnknown* pUnkRowset, HACCESSOR* phAccessor, DBCOUN
 	// to this Accessor, which we will use when fetching data
 	hr = pUnkRowset->QueryInterface(
 		IID_IAccessor, (void**)&pIAccessor);
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pIAccessor, IID_IAccessor, errorCount, errorMessages) < 0) goto CLEANUP;
 	hr = pIAccessor->CreateAccessor(
 		DBACCESSOR_PARAMETERDATA,	//dwAccessorFlags
 		sqlParamsCount,				//cBindings
@@ -618,7 +801,7 @@ HRESULT createParamsAccessor(IUnknown* pUnkRowset, HACCESSOR* phAccessor, DBCOUN
 		phAccessor,					//phAccessor	
 		NULL						//rgStatus
 	);
-	if (oleCheck(hr, errorCount, errorMessages) < 0) goto CLEANUP;
+	if (oleCheck(hr, pIAccessor, IID_IAccessor, errorCount, errorMessages) < 0) goto CLEANUP;
 
 	*pcbRowSize = dwOffset;
 	*ppParamData = pParamData;
