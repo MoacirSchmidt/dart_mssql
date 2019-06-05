@@ -83,7 +83,7 @@ class SqlConnection {
   int lastIdentity() {
     SqlResult r = execute("select @@identity as idty");
     if (r.rows != null && r.rows.isNotEmpty) {
-      return r.rows.first.idty;
+      return r.rows.first.idty.round();
     } else {
       return null;
     }
