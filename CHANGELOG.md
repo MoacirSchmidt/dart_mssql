@@ -1,3 +1,7 @@
+## [0.2.6] 
+
+* lastIdentify fix!
+
 ## [0.2.5] 
 
 * Health suggestions adjustments
