@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:dart_mssql/dart_mssql.dart';
 
 // class "Client" for ORM example
