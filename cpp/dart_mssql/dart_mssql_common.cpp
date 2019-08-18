@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <comutil.h>
 #include <string>
+#include <time.h>
 #include "stdafx.h"
 #include "msoledbsql.h"
 #include "dart_api.h"
@@ -73,6 +74,13 @@ void DumpErrorInfo(IUnknown* pObjectWithError, REFIID IID_InterfaceWithError, in
 
 	// Hard-code an American English locale for the example.  
 	DWORD                   MYLOCALEID = 0x0409;
+
+	// printing current date and time (moacir):
+	time_t					t = time(NULL);
+	char					strTime[26];
+
+	ctime_s(strTime, sizeof strTime, &t);
+	fprintf_s(stderr, "Date/Time:\t%s", strTime);
 
 	// Only ask for error information if the interface supports  
 	// it.  

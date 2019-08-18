@@ -155,7 +155,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);F:\DartSDK32\dart-sdk\bin\dart.lib</AdditionalDependencies>
-      <OutputFile>F:\flutter\polygonus\server\dart_mssql\dart_mssql.dll</OutputFile>
+      <OutputFile>F:\flutter\polygonus_mobile\server\mobile_aqueduct\dart_mssql.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='IsolateTests|Win32'">
@@ -190,7 +190,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);F:\DartSDK64\dart-sdk\bin\dart.lib</AdditionalDependencies>
-      <OutputFile>F:\flutter\polygonus\server\dart_mssql\dart_mssql.dll</OutputFile>
+      <OutputFile>F:\flutter\polygonus_mobile\server\mobile_aqueduct\dart_mssql.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='IsolateTests|x64'">

@@ -83,6 +83,9 @@ void _connectCommand(Dart_NativeArguments arguments) {
 	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 2)), &userName));
 	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 3)), &password));
 	HandleError(Dart_IntegerToInt64(HandleError(Dart_GetNativeArgument(arguments, 4)), &authType));
+	dartMssqlLib = HandleError(Dart_LookupLibrary(Dart_NewStringFromCString("package:dart_mssql/src/sql_connection.dart")));
+	sqlResultClass = HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("SqlResult"), 0, NULL));
+	sqlReturnClass = HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("_SqlReturn"), 0, NULL));
 
 	Dart_Handle dartSqlReturn = HandleError(Dart_New(sqlReturnClass, Dart_Null(), 0, NULL));
 	sqlConnect(serverName, databaseName, userName, password, authType, &pSession, &errorCount, &errorMessages);
@@ -108,6 +111,9 @@ void _executeCommand(Dart_NativeArguments arguments) {
 	HandleError(Dart_IntegerToInt64(HandleError(Dart_GetNativeArgument(arguments, 0)), &handle));
 	HandleError(Dart_StringToCString(HandleError(Dart_GetNativeArgument(arguments, 1)), &sqlCommand));
 	Dart_Handle sqlParams = HandleError(Dart_GetNativeArgument(arguments, 2));
+	dartMssqlLib = HandleError(Dart_LookupLibrary(Dart_NewStringFromCString("package:dart_mssql/src/sql_connection.dart")));
+	sqlResultClass = HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("SqlResult"), 0, NULL));
+	sqlReturnClass = HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("_SqlReturn"), 0, NULL));
 
 	pSession = getHandleFromGlobalInterfaceTable((DWORD)handle, &errorCount, &errorMessages);
 	Dart_Handle dartSqlReturn = HandleError(Dart_New(sqlReturnClass, Dart_Null(), 0, NULL));
@@ -198,10 +204,6 @@ DART_EXPORT Dart_Handle dart_mssql_Init(Dart_Handle library) {
 	if (Dart_IsError(result)) {
 		return result;
 	}
-
-	dartMssqlLib = Dart_NewPersistentHandle(HandleError(Dart_LookupLibrary(Dart_NewStringFromCString("package:dart_mssql/src/sql_connection.dart"))));
-	sqlResultClass = Dart_NewPersistentHandle(HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("SqlResult"), 0, NULL)));
-	sqlReturnClass = Dart_NewPersistentHandle(HandleError(Dart_GetType(dartMssqlLib, Dart_NewStringFromCString("_SqlReturn"), 0, NULL)));
 
 	return Dart_Null();
 }

@@ -3,9 +3,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LocalDebuggerDebuggerType>Mixed</LocalDebuggerDebuggerType>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommand>F:\DartSDK32\dart-sdk\bin\dart.exe </LocalDebuggerCommand>
-    <LocalDebuggerCommandArguments>"--enable-asserts" "example\main.dart" </LocalDebuggerCommandArguments>
-    <LocalDebuggerWorkingDirectory>f:\flutter\polygonus\server\dart_mssql</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommand>F:\DartSDKDebug\sdk\out\DebugX64\dart.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>"--enable-asserts" "bin\main.dart" "192.168.0.101" "80" "SGEIMM"</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>F:\flutter\polygonus_mobile\server\mobile_aqueduct</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='IsolateTests|x64'">
     <LocalDebuggerDebuggerType>Mixed</LocalDebuggerDebuggerType>
@@ -17,9 +17,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommand>F:\DartSDK32\dart-sdk\bin\dart.exe </LocalDebuggerCommand>
-    <LocalDebuggerCommandArguments>"--enable-asserts" "example\main.dart" </LocalDebuggerCommandArguments>
-    <LocalDebuggerWorkingDirectory>f:\flutter\polygonus\server\dart_mssql</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommand>F:\DartSDKDebug\sdk\out\DebugIA32\dart.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>"--enable-asserts" "bin\main.dart" "192.168.0.101" "80" "SGEIMM"</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>F:\flutter\polygonus_mobile\server\mobile_aqueduct</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='IsolateTests|Win32'">
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
