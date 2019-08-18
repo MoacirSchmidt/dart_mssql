@@ -1,3 +1,7 @@
+## [1.0.0] 
+
+* Released for production use
+
 ## [0.2.6] 
 
 * lastIdentify fix!
