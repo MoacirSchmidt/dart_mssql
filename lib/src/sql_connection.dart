@@ -53,12 +53,34 @@ class SqlConnection {
     }
   }
 
+  bool _hasSqlError(String error) {
+    if (isNotEmpty(error)) {
+      throw error;
+    }    
+    return false;
+  }
+
+  _SqlReturn _tryReconnect(_SqlReturn r, String sqlCommand,  [List<dynamic> params]) {
+    if (r.error.indexOf("0x80004005") != -1) { // connection lost. Try reconnecting...
+      r = _connectCommand(host, db, user, password, 0);
+      if (!_hasSqlError(r.error)) {
+        _handle = r.handle;
+        r = _executeCommand(_handle, sqlCommand, params); // re-execute command
+        _hasSqlError(r.error);
+      }
+    } else {
+      throw r.error;
+    }
+    return r;
+  }
+
+
   /// Executes a sql command with optional params 
   SqlResult execute(String sqlCommand, [List<dynamic> params]) {
     _checkHandle();
     _SqlReturn r = _executeCommand(_handle, sqlCommand, params);
     if (isNotEmpty(r.error)) {
-      throw r.error;
+      r = _tryReconnect(r, sqlCommand, params);
     }
     r.result.updateFieldIndexes();
     return r.result;
@@ -69,7 +91,7 @@ class SqlConnection {
     _checkHandle();
     _SqlReturn r = _executeCommand(_handle, sqlCommand, params);
     if (isNotEmpty(r.error)) {
-      throw r.error;
+      r = _tryReconnect(r, sqlCommand, params);
     }
     r.result.updateFieldIndexes();
     if (r.result.rows.isEmpty) {
